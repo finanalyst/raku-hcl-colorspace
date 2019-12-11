@@ -1,0 +1,18 @@
+{
+  "authors" : [
+    "Richard Hainsworth aka finanalyst"
+  ],
+  "build-depends" : [],
+  "depends" : [],
+  "description" : "Colorspace better adapted to human perception, transform to/from RGB",
+  "name" : "Colorspace::HCL",
+  "perl" : "6.*",
+  "provides" : {
+    "Colorspace::HCL" : "lib/Colorspace/HCL.pm6"
+  },
+  "resources" : [],
+  "source-url" : "git://github.com/finanalyst/raku-hcl-colorspace.git",
+  "test-depends" : ["Test" ],
+  "version" : "0.01",
+  "license": "Artistic"
+}
