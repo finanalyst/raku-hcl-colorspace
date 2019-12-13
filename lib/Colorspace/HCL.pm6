@@ -41,29 +41,29 @@ multi sub hcl-to-rgb( $h where $h ~~ NaN, $c, $l, :$form where { $form ~~ any < 
         else { [ 0, 0, 0 ] }
     }
 
-multi sub rgb-to-hcl(
-        Int $ri where 0 <= $ri <= 255,
-        Int $gi where 0 <= $gi <= 255,
-        Int $bi where 0 <= $bi <= 255 )
+subset Col of Int where 0 <= * <= 255;
+
+multi sub rgb-to-hcl( *@trip where { $_.all ~~ Col and .elems == 3 } )
         is export
     {
-        # rgb -> xyz
-        my &rgb_xyz = -> $r is copy { ( $r /= 255 ) <= 0.04045 ?? $r / 12.92 !! exp( 2.4,  ($r + 0.055)/ 1.055 ) }
+        my &rgb_xyz = -> $t is copy { ( $t /= 255 ) <= 0.04045 ?? $t / 12.92 !! exp( 2.4,  ($t + 0.055)/ 1.055 ) }
         my &xyz_lab = -> $t { $t > T3 ?? exp(1/3, $t ) !! T0 + $t / T2 }
-        my $r = &rgb_xyz( $ri );
-        my $g = &rgb_xyz( $gi );
-        my $b = &rgb_xyz( $bi );
-        my $x = &xyz_lab((0.4124564 * $r + 0.3575761 * $g + 0.1804375 * $b) / Xn );
-        my $y = &xyz_lab((0.2126729 * $r + 0.7151522 * $g + 0.0721750 * $b) / Yn );
-        my $z = &xyz_lab((0.0193339 * $r + 0.1191920 * $g + 0.9503041 * $b) / Zn );
+
+        # rgb -> xyz
+        my @rgb = @trip>>.&rgb_xyz;
+        my ( $x, $y, $z ) = ( 
+                ((0.4124564 * @rgb[0] + 0.3575761 * @rgb[1] + 0.1804375 * @rgb[2]) / Xn ),
+                ((0.2126729 * @rgb[0] + 0.7151522 * @rgb[1] + 0.0721750 * @rgb[2]) / Yn ),
+                ((0.0193339 * @rgb[0] + 0.1191920 * @rgb[1] + 0.9503041 * @rgb[2]) / Zn )
+                )>>.&xyz_lab;
         # xyz -> lab
         my $l = 116 * $y - 16;
         $l = 0 if $l < 0;
         my $a = 500 * ($x -$y);
-        my $bx = 200 * ($y - $z);
+        my $b = 200 * ($y - $z);
         # lab -> hcl
-        my $c = sqrt( $a * $a + $bx * $bx);
-        my $h = ( atan2( $bx, $a) * 180 / pi + 360 ) % 360;
+        my $c = sqrt( $a * $a + $b * $b);
+        my $h = ( atan2( $b, $a) * 180 / pi + 360 ) % 360;
         $h = NaN if $c < 0.00001;
         [ $h.round(1), $c.round(1), $l.round(1) ]
     }
